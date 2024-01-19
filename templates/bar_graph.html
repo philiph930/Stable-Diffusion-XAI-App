@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Importance Bar Graph</title>
+    <link rel="stylesheet" type="text/css" href="../static/graph.css">
+    <!-- Add jQuery library -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- Add script for automatic form submission -->
+    <script>
+        $(document).ready(function () {
+            // Add change event listener to all sliders
+            $('input[type="range"]').on('input', function () {
+                // Automatically submit the form when a slider changes
+                updateGraph();
+            });
+
+            // Function to update the graph using AJAX
+            function updateGraph() {
+                $.ajax({
+                    type: 'POST',
+                    url: '/your-url', // Specify the URL to handle the form submission
+                    data: $('form').serialize(), // Serialize the form data
+                    success: function (response) {
+                        // Handle the response (if needed)
+                        // For example, you can update the image or other elements on the page
+                        console.log('Graph updated successfully');
+                        $('#graph-image').attr('src', 'data:image/png;base64,' + response.img_base64);
+
+                    },
+                    error: function (error) {
+                        console.error('Error updating graph:', error);
+                    }
+                });
+            }
+        });
+    </script>
+    <!-- <script src="{{ url_for('static', filename='script.js') }}"></script> -->
+</head>
+
+<body style="background-color:lightblue">
+    <div>
+        <h1 style="margin-left:420px; font-size:26px; font-family:Verdana, Geneva, Tahoma, sans-serif">Stable Diffusion
+            XAI Visualizer</h1>
+    </div>
+
+    <form action="your-url" method="post">
+        <label class="prompt" for="prompt"
+            style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif">Prompt</label>
+        <input type="text" name="prompt" value="" style="width:400px;" required>
+        <br>
+        <label class="num_features" for="number_features"
+            style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif">Number of Top Features</label>
+        <input type="number" name="number_features" value="" style="width:50px; margin-bottom:20px;" min="2" required>
+        <input type="submit" name="submit" value="Generate"
+            style="height:20px; width:100px; background-color:lightblue; margin-left:10px;">
+        <br>
+        <!-- <div class="progress" id="PreLoaderBar"> -->
+            <div class="indeterminate"></div>
+        </div>
+    </form>
+
+    <div class="flex-container" style="background-color:white;">
+        <div class="prompt-box" style="margin-top: 20px;">
+            <p
+                style="font-size:14px; font-family:Verdana, Geneva, Tahoma, sans-serif; margin-left:auto; margin-right:auto;">
+                {{ prompt }}</p>
+            <br>
+            <img class="black-box-image" src="{{ img_url }}" alt="Generated Image">
+        </div>
+    </div>
+
+    <div class='flex-container' style="background-color:white">
+
+        <div class="bar-graph" style="margin-left: 200px;">
+            <img id="graph-image" src="data:image/png;base64,{{ img_base64 }}" alt="Word Importance Bar Graph">
+        </div>
+
+        <div class="form-container">
+            <form method="post" action="your-url">
+                {% for word, feature_importance in word_importances.items() %}
+                <div class="slider-container">
+                    <label class="descriptor" for="feature_importance_{{ word }}">{{ word }}</label>
+                    <input type="range" id="feature_importance_{{ word }}" name="feature_importance_{{ word }}" min="0.0"
+                        max="2.0" step="0.01" value="{{ feature_importance }}" required list="tickmarks_{{ word }}">
+                    <datalist id="tickmarks_{{ word }}">
+                        <option>0.0</option>
+                        <option>0.2</option>
+                        <option>0.4</option>
+                        <option>0.6</option>
+                        <option>0.8</option>
+                        <option>1.0</option>
+                        <option>1.2</option>
+                        <option>1.4</option>
+                        <option>1.6</option>
+                        <option>1.8</option>
+                        <option>2.0</option>
+                    </datalist>
+                    <div class="tick-labels">
+                        <label>0.0</label>
+                        <label>0.2</label>
+                        <label>0.4</label>
+                        <label>0.6</label>
+                        <label>0.8</label>
+                        <label>1.0</label>
+                        <label>1.2</label>
+                        <label>1.4</label>
+                        <label>1.6</label>
+                        <label>1.8</label>
+                        <label>2.0</label>
+                    </div>
+                </div>
+                {% endfor %}
+                <input type="submit" name="submit" value="Adjust Weights" style="height:25px; width:130px; background-color:lightblue; margin-top:10px;">
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

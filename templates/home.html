@@ -1,0 +1,52 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="../static/graph.css">
+    <!-- <script src="{{ url_for('static', filename='script.js') }}"></script> -->
+</head>
+
+<body style="background-color:lightblue;">
+    <div class="content">
+        <div class="home">
+            <div class="headers">
+                <h1 style="margin-left:150px; margin-bottom:-10px; font-size:26px; font-family:Verdana, Geneva, Tahoma, sans-serif">Stable Diffusion Explainable AI Model</h1>
+                <h2 style="margin-left:235px; margin-bottom:20px; font-size: 22px; font-family:Verdana, Geneva, Tahoma, sans-serif">Feature Importance Generator</h2>
+            </div>
+
+            <div class="inputs">
+                <form action="your-url" method="post">
+                    <label for="prompt" style="margin-left:180px; font-family:Verdana, Geneva, Tahoma, sans-serif">Prompt</label>
+                    <input type="text" name="prompt" value="" style="width:400px;" required>
+                    <br>
+                    <label for="number_features" style="margin-left:180px; font-family:Verdana, Geneva, Tahoma, sans-serif">Number of Top Features</label>
+                    <input type="number" name="number_features" value="" min="2" style="width:50px;" required>
+                    <input type="submit" name="submit" value="Generate"
+                        style="height:25px; width:80px; background-color:lightblue; margin-left:10px;">
+                </form>
+                <!-- <div class="progress" id="PreLoaderBar"> -->
+                    <div class="indeterminate"></div>
+                </div>
+            </div>
+
+            <div class="bird">
+                <img id="blue-bird" src="../static/blue_bird.jpeg" alt="Blue Bird Image" style="margin-top: 20px;">
+                <div class="image-description">
+                    <p style="font-size:12px; font-family:Verdana, Geneva, Tahoma, sans-serif">This is an image generated from the Stable Diffusion Model accessed via the Dezgo API.
+                        This is the prompt used to generate the image:
+
+                        "happy blue bird singing under a green apple tree"
+
+                        Our website utilizes our own XAI program to derive the feature importances
+                        of generated images such as this image, and display those results in an interactive bar
+                        graph. Feature importance values (of words in the prompt) are normalized such that they are
+                        between
+                        0.0
+                        and
+                        1.0,
+                        inclusive (1.0 indicates most importance, 0.0 indicates no importance). Users are able to
+                        adjust feature importance values based on what they think the feature importances should be,
+                        based on comparison between the input prompt and the generated image from that prompt.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
