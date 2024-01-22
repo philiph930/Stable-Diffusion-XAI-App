@@ -43,6 +43,14 @@ import matplotlib.pyplot as plt
 
 from io import BytesIO
 
+from urllib.request import urlopen
+import ssl
+myssl = ssl.create_default_context();
+myssl.check_hostname=False
+myssl.verify_mode=ssl.CERT_NONE
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
 
 '''
 LimeBase class
