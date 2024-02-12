@@ -1,0 +1,72 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="../static/styles/graph.css">
+    <link rel="stylesheet" href="../static/styles/bargraph.css">
+    <!-- <script src="{{ url_for('static', filename='script.js') }}"></script> -->
+</head>
+
+<body style="background-color:#424242;">
+    <div class="searchBar">
+        <div class="siteName">
+            <p>Stable Diffusion Explainable AI Model</p>
+            <p>Feature Importance Generator</p>
+        </div>
+        <div class="promptSearch">
+            <form action="your-url" method="post">
+                <input type="text" name="promptText" placeholder="Type your prompt here" style="
+                width:400px;
+                border-radius: 12px;
+                border: 0;
+                background-color:#2d3d61;"
+                required>
+                <input type="number" name="featureNumber" placeholder="0" min="2" style="
+                width:50px;
+                border-radius: 12px;
+                border: 0;
+                background-color:#2d3d61;" 
+                required>
+                <input type="submit" name="promptSubmit" value="Go" 
+                    style=
+                    "height:25px; 
+                    width:40px; 
+                    border-radius: 12px;
+                    background-color:#2d3d61; 
+                    margin-left:10px;
+                    color: white;">
+            </form>
+        </div>
+        <div class="profile">
+            Profile
+        </div>
+    </div>
+    <div class="content">
+        <div class="home">
+            <div class="headers">
+                <h1 style="margin-left:150px; margin-bottom:-10px; font-size:26px; font-family:Verdana, Geneva, Tahoma, sans-serif">Stable Diffusion Explainable AI Model</h1>
+                <h2 style="margin-left:235px; margin-bottom:20px; font-size: 22px; font-family:Verdana, Geneva, Tahoma, sans-serif">Feature Importance Generator</h2>
+            </div>
+            
+        </div>
+
+        <div class="bird">
+            <img id="blue-bird" src="../static/blue_bird.jpeg" alt="Blue Bird Image" style="margin-top: 20px;">
+            <div class="image-description">
+                <p style="font-size:12px; font-family:Verdana, Geneva, Tahoma, sans-serif">This is an image generated from the Stable Diffusion Model accessed via the Dezgo API.
+                    This is the prompt used to generate the image:
+
+                    "happy blue bird singing under a green apple tree"
+
+                    Our website utilizes our own XAI program to derive the feature importances
+                    of generated images such as this image, and display those results in an interactive bar
+                    graph. Feature importance values (of words in the prompt) are normalized such that they are
+                    between
+                    0.0
+                    and
+                    1.0,
+                    inclusive (1.0 indicates most importance, 0.0 indicates no importance). Users are able to
+                    adjust feature importance values based on what they think the feature importances should be,
+                    based on comparison between the input prompt and the generated image from that prompt.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>

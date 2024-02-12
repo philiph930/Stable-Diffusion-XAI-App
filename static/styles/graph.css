@@ -4,7 +4,6 @@
 
 .content {
     background-color: white;
-    position: fixed;
     top: 0;
     bottom: 0;
     left: 20%;
@@ -33,7 +32,6 @@
     margin-left: auto;
     margin-right: auto;
     margin-bottom: -20px;
-    background-color: white;
 }
 
 input[name="prompt"] {
@@ -75,11 +73,22 @@ input[name="number_features"] {
     flex: 1;
     flex-direction: column;
     border-style: solid;
-    border-color: orange;
+    border-color: black;
     min-width: 200px;
     max-width: 38.5%;
     margin-left: 400px;
 }
+
+.tick-labels {
+    color: black;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    width: 95%;
+    margin-left: 3px;
+    font-size: 8px;
+}
+
 
 .generated-image {
     margin-left: 65px;
@@ -87,7 +96,7 @@ input[name="number_features"] {
     flex: 1;
     flex-direction: column;
     border-style: solid;
-    border-color: orange;
+    border-color: lightblue;
     min-width: 300px;
     max-width: 35%;
 }
@@ -114,7 +123,7 @@ input[name="number_features"] {
 
 .slider-container {
     width: 300px;
-    background: linear-gradient(to right, rgb(255, 204, 0) 0%, rgb(210, 50, 1) 100%);
+    background: lightblue;
 }
 
 input[type=range]::-webkit-slider-runnable-track {
@@ -177,18 +186,9 @@ input[type=range] {
     width: 95%;
 }
 
-.tick-labels {
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    margin-top: 5px;
-    width: 95%;
-    margin-left: 3px;
-    font-size: 8px;
-}
 
 .descriptor {
-    color: white;
+    color: black;
     font-weight: bold;
     font-size: 16px;
     margin-left: 6px;
@@ -214,7 +214,7 @@ input[type=range] {
 .progress .indeterminate:before {
     content: '';
     position: absolute;
-    background-color: #2C67B1;
+    background-color: lightblue;
     top: 0;
     left: 0;
     bottom: 0;
@@ -226,7 +226,7 @@ input[type=range] {
 .progress .indeterminate:after {
     content: '';
     position: absolute;
-    background-color: #2C67B1;
+    background-color: lightblue;
     top: 0;
     left: 0;
     bottom: 0;
@@ -307,4 +307,46 @@ input[type=range] {
 
 .loading-animation {
     animation: indeterminate 2s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite, indeterminate-short 2s cubic-bezier(0.165, 0.84, 0.44, 1) 1.75s infinite;
+}
+
+.content {
+    background-color:#2d3d61;
+}
+
+.searchBar {
+    display: flex;
+    color: white;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    
+}
+
+.siteName {
+    display: inline-block;
+    padding-left:2%; 
+    font-size:16px; 
+    font-weight: 100;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    width: 30%;
+}
+
+.promptSearch {
+    display: inline-block;
+    border: 1px solid #8b8b8b; /* Define a border for the div */
+    border-radius: 20px; /* Round the edges of the div */
+    padding: 10px;
+    width: 40%;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile {
+    display: inline-block;
+    width: 20%;
+    align-items: center;
+    justify-content: center;
+}
+
+.promptSubmit {
 }

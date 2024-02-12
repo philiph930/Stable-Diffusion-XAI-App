@@ -15,10 +15,11 @@ import re
 import requests
 from PIL import Image
 
+
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-def generate_bar_graph(original_features_dict, adjusted_feature_values):
+def generateBarGraph(original_features_dict, adjusted_feature_values):
     print(session['word_importances'])
     words = list(original_features_dict.keys())
     original_weights = list(original_features_dict.values())
@@ -114,7 +115,7 @@ def adjust(img_base64):
             else:
                 continue  
 
-        return render_template('bar_graph.html', img_base64=img_base64, word_importances=adjusted_importances, prompt=prompt, img_url='static/image.png')
+        return render_template('barGraph.html', img_base64=img_base64, word_importances=adjusted_importances, prompt=prompt, img_url='static/image.png')
 
 
 def update():
@@ -122,7 +123,7 @@ def update():
         # Get a list of bar lengths from the form data
         ordered_importances = dict(sorted(session['word_importances'].items(), key=lambda item: item[1], reverse=True))
         adjusted_feature_values = [float(request.form[f'{word}']) for word in request.form.keys() if word.startswith('feature_importance_')]
-        img_base64 = generate_bar_graph(ordered_importances, adjusted_feature_values)
+        img_base64 = generateBarGraph(ordered_importances, adjusted_feature_values)
 
         adjusted_word_importances = {}
 
@@ -144,17 +145,21 @@ def update():
 def home():
     return render_template('home.html')
 
+@app.route('/main-page')
+def mainpage():
+    return render_template('mainpage.html');
+
 @app.route('/your-url', methods=['GET', 'POST'])
-def your_url():
+def yourUrl():
     initial_bar_lengths = {}
     if request.method == 'POST':
 
         #if request.form.get('submit') == 'Update Graph':
             #return update()
-        if request.form.get('submit') == 'Generate':
-            prompt = request.form['prompt']
+        if request.form.get('promptSubmit') == 'Go':
+            prompt = request.form['promptText']
             session['prompt'] = prompt
-            num_features = request.form['number_features']
+            num_features = request.form['featureNumber']
             word_importances = stablediffusion_xai_model.main(prompt, num_features)
             session['word_importances'] = word_importances
             
@@ -179,14 +184,14 @@ def your_url():
                 # Get a list of bar lengths from the form data
                 bar_lengths = [float(request.form[f'bar_length_{word}']) for word in request.form.keys() if word.startswith('bar_length_')]
 
-            #return render_template('your_url.html', prompt=request.form['prompt'])
+            #return render_template('yourUrl.html', prompt=request.form['prompt'])
             '''
 
             # Check if word_importances is a dictionary
             if isinstance(word_importances, dict):
-                img_base64 = generate_bar_graph(word_importances, default_ones.values())
+                img_base64 = generateBarGraph(word_importances, default_ones.values())
                 #session['img_base64'] = img_base64
-                return render_template('bar_graph.html', img_base64=img_base64, word_importances=default_ones, prompt=prompt, img_url='static/image.png')
+                return render_template('barGraph.html', img_base64=img_base64, word_importances=default_ones, prompt=prompt, img_url='static/image.png')
             else:
                 # Handle the case where word_importances is not a dictionary
                 return "Invalid data format. Expected a dictionary."
@@ -194,7 +199,7 @@ def your_url():
         elif request.form.get('submit') == 'Adjust Weights':
             ordered_importances = dict(sorted(session['word_importances'].items(), key=lambda item: item[1], reverse=True))
             adjusted_feature_values = [float(request.form[f'{word}']) for word in request.form.keys() if word.startswith('feature_importance_')]
-            img_base64 = generate_bar_graph(ordered_importances, adjusted_feature_values)
+            img_base64 = generateBarGraph(ordered_importances, adjusted_feature_values)
             return adjust(img_base64)
         
         else: 
