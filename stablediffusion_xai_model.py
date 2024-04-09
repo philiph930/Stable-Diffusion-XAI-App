@@ -73,6 +73,7 @@ class LimeBase(object):
 
     def _data_labels_text(self, model_inputs, label, black_box_img, classifier_fn, words, stop_indices, num_samples, batch_size, distance_metric, unk_id, pad_id):
         
+        print("Starting perturbed sample processing")
         # Obtaining the clip model and preprocessor
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model, preprocess = clip.load("ViT-B/32", device=device)
@@ -124,13 +125,15 @@ class LimeBase(object):
                         break
                 
                 samples = []
-                
+
+        print("samples array generated")
+
         if len(samples) > 0:
             pred_inputs = (np.array(samples), ) + tuple(
                 [np.repeat(inp, len(samples), axis=0) for inp in model_inputs[1:]])
             
             classifier_fn(*pred_inputs, labels=label, prompt_words=words, perturbed_sample_num=sample_num)
-            
+
             file = open('image_embeddings', 'rb')
 
             while True:
@@ -143,6 +146,8 @@ class LimeBase(object):
 
         # close the file
         file.close()
+
+        print("Sample image encodings generated")
         
         black_box = preprocess(black_box_img).unsqueeze(0).to(device)
 
@@ -173,6 +178,7 @@ class LimeBase(object):
         samples = np.array(samples)
         distances = sklearn.metrics.pairwise_distances(samples, samples[0].reshape(1, -1), metric=distance_metric).ravel()
             
+        print("Samples, image encodings, distances returned")
         return samples, data_set, distances
 
 
@@ -193,6 +199,7 @@ def classifier_fn(*args, labels, prompt_words, perturbed_sample_num) :
     
     text = ""
     for i in range(len(args[0])):
+        print("perturbed sample " + str(i) + " image generating starting...")
         for j in range(len(prompt_words)):
             if args[0][i][j] != 0:
                 text = text + (labels[j]) + ' '
@@ -314,10 +321,11 @@ def normalized_coefficient_scaling(scores):
 Main
 '''
 
-def main(prompt, num_features):
+def main(prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_features, words, stop_word_indices, cluster_centers, total_words):
 
-    print('running')
+    print('Generating samples...')
 
+    '''
     # Load pre-trained Word2Vec model
     model = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin.gz', binary=True)
 
@@ -430,8 +438,11 @@ def main(prompt, num_features):
 
         else:
             continue
+    
+    '''
 
-        '''    
+    ''' 
+       
         #Request black box image from Stable Diffusion API and save as .png file
         r = requests.post(
             "https://api.deepai.org/api/stable-diffusion",
@@ -546,9 +557,10 @@ def main(prompt, num_features):
     plt.show()
     '''
     
+    print("result importances done")
     return word_importance_ordered
     #black_box_image_url
     
 if __name__ == "__main__":
-    word_importances = main(sys.argv[1], int(sys.argv[2]))
+    word_importances = main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5]), sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9])
     print(word_importances)

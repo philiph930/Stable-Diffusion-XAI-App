@@ -1,3 +1,4 @@
+<!-- bar_graph.html -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -39,6 +40,49 @@
             }
         });
     </script>
+
+<!--
+    <script>
+        $(document).ready(function() {
+            // Add an event listener to the form submission
+            $('form').submit(function() {
+                // Redirect to /your-url immediately after form submission
+                window.location.href = '/your-url';
+                return false; // Prevent the form from submitting (if needed)
+            });
+        });
+    </script>
+-->
+
+<!--
+    <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8"></script>
+-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io();
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+
+        socket.on('send_word_importances', function (importances) {
+            console.log("Received Word Importances")
+            socket.emit('session_importances', importances)
+            word_import
+        })
+
+        socket.on('update_image', function (img) {
+            console.log('Update Image');
+            console.log(JSON.parse(img).img_url);
+            $('#black-box-image').attr('src', JSON.parse(img).img_url);
+        });
+
+        socket.on('graph-image', function (graph) {
+            console.log('data:image/png;base64,' + JSON.parse(graph).img_base64);
+            $('#graph-image').attr('src', 'data:image/png;base64,' + JSON.parse(graph).img_base64);
+        });
+    </script>
     <!-- <script src="{{ url_for('static', filename='script.js') }}"></script> -->
 </head>
 
@@ -64,14 +108,34 @@
         </div>
     </form>
 
+    <form action="your-url" method="post">
+        <!-- <input type="submit" name="submit" value="Render"
+            style="height:20px; width:100px; background-color:lightblue; margin-left:10px;"> -->
+    </form>
+
     <div class="flex-container" style="background-color:white;">
         <div class="prompt-box" style="margin-top: 20px;">
             <p
                 style="font-size:14px; font-family:Verdana, Geneva, Tahoma, sans-serif; margin-left:auto; margin-right:auto;">
                 {{ prompt }}</p>
             <br>
-            <img class="black-box-image" src="{{ img_url }}" alt="Generated Image">
+            <img id="black-box-image" src="{{ img_url }}" alt="Generated Image">
         </div>
+    </div>
+
+    <form action="your-url" method="post">
+        <div style="background-color: white;">
+            <br>
+            <label class="negPrompt" for="negPrompt"
+                style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
+            <input type="text" name="negPrompt" value="" style="width:400px;">
+            <br>
+        </div>
+    </form>
+
+    <div id="loading-spinner" style="display: none;">
+        <!-- Add your loading spinner HTML or other loading indicators here -->
+        Loading...
     </div>
 
     <div class='flex-container' style="background-color:white">
@@ -86,39 +150,69 @@
                 <div class="slider-container">
                     <label class="descriptor" for="feature_importance_{{ word }}">{{ word }}</label>
                     <input type="range" id="feature_importance_{{ word }}" name="feature_importance_{{ word }}" min="0.0"
-                        max="2.0" step="0.01" value="{{ feature_importance }}" required list="tickmarks_{{ word }}">
+                        max="1.0" step="0.125" value="{{ feature_importance }}" required list="tickmarks_{{ word }}">
                     <datalist id="tickmarks_{{ word }}">
                         <option>0.0</option>
-                        <option>0.2</option>
-                        <option>0.4</option>
-                        <option>0.6</option>
-                        <option>0.8</option>
+                        <option>0.25</option>
+                        <option>0.5</option>
+                        <option>0.75</option>
                         <option>1.0</option>
-                        <option>1.2</option>
-                        <option>1.4</option>
-                        <option>1.6</option>
-                        <option>1.8</option>
-                        <option>2.0</option>
                     </datalist>
                     <div class="tick-labels">
-                        <label>0.0</label>
-                        <label>0.2</label>
-                        <label>0.4</label>
-                        <label>0.6</label>
-                        <label>0.8</label>
-                        <label>1.0</label>
-                        <label>1.2</label>
-                        <label>1.4</label>
-                        <label>1.6</label>
-                        <label>1.8</label>
-                        <label>2.0</label>
+                        <label>Least</label>
+                        <label>Less</label>
+                        <label>Moderate</label>
+                        <label>More</label>
+                        <label>Most</label>
                     </div>
                 </div>
                 {% endfor %}
+
+                <label class="negPrompt" for="negPrompt"
+                style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
+                <input type="text" name="negPrompt" value="" style="width:400px;">
+
                 <input type="submit" name="submit" value="Adjust Weights" style="height:25px; width:130px; background-color:lightblue; margin-top:10px;">
+                <!-- <input type="submit" name="submit" value="Render"
+                    style="height:20px; width:100px; background-color:lightblue; margin-left:10px;"> -->
             </form>
         </div>
     </div>
+
+<!--
+    <script>
+        $(document).ready(function () {
+            /*var socket = io('/your-url');*/
+            var socket = io('/your-url');
+            console.log("test")
+
+            socket.on('connect', function () {
+                console.log('Connected to the server');
+            });
+
+            socket.on('update_image', function () {
+                console.log('Connected to the server');
+            });
+
+            socket.on('update_image', function (data) {
+                console.log('Received update_image event:');
+
+                // Display the black box image
+                $('#black-box-image').attr('src', data.img_url);
+
+                // Hide the loading spinner
+                $('#loading-spinner').hide();
+            });
+
+            socket.on('graph-image', function (data) {
+                // Handle the word importances update
+                console.log('Word importances:', data.word_importances);
+                // Add code to update the UI with word importances as needed
+            });
+        });
+    </script>
+-->
+
 </body>
 
 </html>
