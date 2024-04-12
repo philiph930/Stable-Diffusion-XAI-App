@@ -145,6 +145,31 @@
         </div>
 
         <div class="form-container">
+            <form method="post" action = "your-url">
+                {% for word, feature_importance in word_importances.items() %}
+                <div class="button-container">
+                    
+                    <label class="descriptor" for="feature_importance_{{ word }}">{{ word}}</label>
+                    <div class="button-row">
+                        <input type="radio" name="button_{{ word }}" value="--{{ word }}" id="--{{ word }}"><label for="--{{ word }}">--</label>
+                        <input type="radio" name="button_{{ word }}" value="-{{ word }}" id="-{{ word }}"><label for="-{{ word }}">-</label>
+                        <input type="radio" name="button_{{ word }}" value="={{ word }}" id="={{ word }}" checked="checked"><label for="={{ word }}">=</label>
+                        <input type="radio" name="button_{{ word }}" value="+{{ word }}" id="+{{ word }}"><label for="+{{ word }}">+</label>
+                        <input type="radio" name="button_{{ word }}" value="++{{ word }}" id="++{{ word }}"><label for="++{{ word }}">++</label>
+                    </div>
+                </div>
+
+                {% endfor %}
+
+                <label class="negPrompt" for="negPrompt"
+                style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
+                <input type="text" name="negPrompt" value="" style="width:400px;">
+
+                <input type="submit" name="submit" value="Adjust Weights" style="height:25px; width:130px; background-color:lightblue; margin-top:10px;">
+                <!-- <input type="submit" name="submit" value="Render"
+                    style="height:20px; width:100px; background-color:lightblue; margin-left:10px;"> -->
+            </form>
+            <!--
             <form method="post" action="your-url">
                 {% for word, feature_importance in word_importances.items() %}
                 <div class="slider-container">
@@ -173,9 +198,9 @@
                 <input type="text" name="negPrompt" value="" style="width:400px;">
 
                 <input type="submit" name="submit" value="Adjust Weights" style="height:25px; width:130px; background-color:lightblue; margin-top:10px;">
-                <!-- <input type="submit" name="submit" value="Render"
-                    style="height:20px; width:100px; background-color:lightblue; margin-left:10px;"> -->
-            </form>
+            </form> 
+            -->
+            
         </div>
     </div>
 
