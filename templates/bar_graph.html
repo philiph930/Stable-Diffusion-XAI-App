@@ -139,15 +139,25 @@
     </div>
 
     <div class='flex-container' style="background-color:white">
-
+        <!--
         <div class="bar-graph" style="margin-left: 200px;">
             <img id="graph-image" src="data:image/png;base64,{{ img_base64 }}" alt="Word Importance Bar Graph">
         </div>
+        -->
 
         <div class="form-container">
             <form method="post" action = "your-url">
-                {% for word, feature_importance in word_importances.items() %}
                 <div class="button-container">
+                    <div>
+                        <div class="radio-button-discription">
+                            <a class="generated-image-description">Importance Editor</a>
+                        </div>
+                        <div class="graph-discription">
+                            <a class="generated-image-description">Current Importance Comparison</a>
+                        </div>
+                    </div>
+                {% for word, feature_importance in word_importances.items() %}
+                
                     
                     <label class="descriptor" for="feature_importance_{{ word }}">{{ word}}</label>
                     <div class="button-row">
@@ -156,10 +166,15 @@
                         <input type="radio" name="button_{{ word }}" value="={{ word }}" id="={{ word }}" checked="checked"><label for="={{ word }}">=</label>
                         <input type="radio" name="button_{{ word }}" value="+{{ word }}" id="+{{ word }}"><label for="+{{ word }}">+</label>
                         <input type="radio" name="button_{{ word }}" value="++{{ word }}" id="++{{ word }}"><label for="++{{ word }}">++</label>
+                        <div class="bar-graph-border">
+                            <div class="bar-graph-fill" style="width: calc(1 * 100px);"></div>
+                        </div>
                     </div>
-                </div>
+                
 
                 {% endfor %}
+
+                </div>
 
                 <label class="negPrompt" for="negPrompt"
                 style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
