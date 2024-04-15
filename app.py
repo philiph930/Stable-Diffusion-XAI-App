@@ -76,6 +76,7 @@ def start_async_task(prompt, num_features, shared):
 def generate_bar_graph(original_features_dict, adjusted_feature_values):
     #print(session['word_importances'])
     words = list(original_features_dict.keys())
+    words = [word.replace('+', '').replace('-', '') for word in words]
     original_weights = list(original_features_dict.values())
 
     print(f"{words=}")
@@ -88,11 +89,11 @@ def generate_bar_graph(original_features_dict, adjusted_feature_values):
     # Generate bar graph
     fig, ax = plt.subplots()
 
-    rects1 = ax.bar(x - width/2, original_weights, width, label='Original Weights')
-    rects2 = ax.bar(x + width/2, [value * weight * 2 for value, weight in zip(adjusted_feature_values, original_weights)], width, label='Adjusted Weights')
+    rects1 = ax.bar(x, original_weights, width)
+    #rects2 = ax.bar(x + width/2, [value * weight * 2 for value, weight in zip(adjusted_feature_values, original_weights)], width, label='Adjusted Weights')
 
     ax.bar_label(rects1, padding=3, fmt='%1.2f')
-    ax.bar_label(rects2, padding=3, fmt='%1.2f')
+    #ax.bar_label(rects2, padding=3, fmt='%1.2f')
 
     #plt.bar(words, [bar_length * importance for bar_length, importance in zip(bar_lengths, importances)])
     ax.set_xlabel('Words', fontweight='bold')
@@ -119,7 +120,7 @@ def adjust(img_base64):
     #if 'word_importances' in session:
     #ordered_importances = dict(sorted(session['word_importances'].items(), key=lambda item: item[1], reverse=True))
     ordered_importances = dict(sorted(shared_data['importances'].items(), key=lambda item: item[1], reverse=True))
-    adjusted_feature_values = [float(request.form[f'{word}']) for word in request.form.keys() if word.startswith('feature_importance_')]
+    adjusted_feature_values = [request.form[f'{word}'] for word in request.form.keys() if word.startswith('button_')]
     adjusted_importances = {}
 
     prompt = session['prompt']
@@ -131,19 +132,26 @@ def adjust(img_base64):
 
         print(adjusted_feature_values[i])
 
-        if adjusted_feature_values[i] != 0.50:
+        if adjusted_feature_values[i][0] != '=':
 
+            '''
             numSigns = (adjusted_feature_values[i] - 0.50) / 0.125
             print(numSigns)
             pattern = re.compile(rf'\b{re.escape(word)}\b', re.IGNORECASE)
 
             if numSigns > 0:
                 adjustment = '+' * int(numSigns)
+            '''
+            op1 = adjusted_feature_values[i][0]
+            op2 = adjusted_feature_values[i][1] if adjusted_feature_values[i][1] in ('+', '-') else ''
+            operator = op1 + op2
                 
-                # Replace the target word with "(word: weight)"
-                prompt = pattern.sub(f"{word}" + adjustment, prompt)
-                print(prompt)
+            # Replace the target word with "(word: weight)"
+            pattern = re.compile(rf'\b{re.escape(word)}\b', re.IGNORECASE)
+            prompt = pattern.sub(f"{word}" + operator, prompt)
+            print(prompt)
             
+            '''
             else:
                 adjustment = '-' * int(abs(numSigns))
                 print(adjustment)
@@ -151,8 +159,9 @@ def adjust(img_base64):
                 # Replace the target word with "(word: weight)"
                 prompt = pattern.sub(f"{word}" + adjustment, prompt)
                 print(prompt)
+            '''
 
-            adjusted_importances[word] = adjusted_feature_values[i]
+            #adjusted_importances[word] = adjusted_feature_values[i]
         
         i = i + 1
 
@@ -361,7 +370,7 @@ def your_url():
             print(request.form)
             #ordered_importances = dict(sorted(session['word_importances'].items(), key=lambda item: item[1], reverse=True))
             ordered_importances = dict(sorted(shared_data['importances'].items(), key=lambda item: item[1], reverse=True))
-            adjusted_feature_values = [float(request.form[f'{word}']) for word in request.form.keys() if word.startswith('feature_importance_')]
+            adjusted_feature_values = [request.form[f'{word}'] for word in request.form.keys() if word.startswith('button_')]
             img_base64 = generate_bar_graph(ordered_importances, adjusted_feature_values)
             return adjust(img_base64)
         
