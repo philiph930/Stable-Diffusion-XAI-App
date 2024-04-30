@@ -28,6 +28,8 @@ import json
 import time
 import os
 
+import nltk
+
 load_dotenv('API_KEY.env')
 api_key = os.getenv("OPENAI_API_KEY")
 
@@ -42,7 +44,7 @@ shared_data = {"img": {}, "importances": {}}
 
 client_word_importances = {}
 
-async def generate_image_async(prompt, num_features, shared):
+async def generate_image_async(prompt, num_features, shared, neg_prompt, replacement_words):
 
     cleaned_prompt = re.sub(r'[\\(\\):0-9.]', '', prompt)
 
@@ -51,7 +53,7 @@ async def generate_image_async(prompt, num_features, shared):
     shared_data["img"] = black_box_image
     socketio.emit('update_image', json.dumps({'img_url': 'static/image.png'}))
 
-    word_importances = stablediffusion_xai_model.main(cleaned_prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_features, words, stop_word_indices, cluster_centers, total_words)
+    word_importances = stablediffusion_xai_model.main(cleaned_prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_features, words, stop_word_indices, cluster_centers, total_words, neg_prompt, replacement_words)
     shared_data["importances"] = word_importances
     socketio.emit('send_word_importances', word_importances)
 
@@ -68,10 +70,10 @@ async def generate_image_async(prompt, num_features, shared):
     #return render_template('bar_graph.html', img_base64=img_base64, word_importances=default_ones, prompt=prompt, img_url='static/image.png')
     return word_importances
 
-def start_async_task(prompt, num_features, shared):
+def start_async_task(prompt, num_features, shared, neg_prompt, replacement_words):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(generate_image_async(prompt, num_features, shared))
+    loop.run_until_complete(generate_image_async(prompt, num_features, shared, neg_prompt, replacement_words))
 
 def generate_bar_graph(original_features_dict, adjusted_feature_values):
     #print(session['word_importances'])
@@ -101,7 +103,7 @@ def generate_bar_graph(original_features_dict, adjusted_feature_values):
     ax.set_title('Top Feature Weights', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(words)
-    ax.set_ylim(0.0, 2.2)
+    ax.set_ylim(-2.2, 2.2)
     ax.legend()
 
 
@@ -181,13 +183,34 @@ def adjust(img_base64):
             temperature = 0.0,
             max_tokens = 3000,
             messages = [
-                {"role": "system", "content": "You are a prompt generator that helps a user"},
-                {"role": "user", "content": "Generate exactly: " + prompt + "with no" + negativePromptString}
+                {"role": "system", "content": "You are a prompt generator that incorporates desired negative prompts"},
+                {"role": "user", "content": "Replicate the prompt (keeping the +'s and -'s) below while incorporating the negative prompts 'blur, apples', replacing them with antonyms if it's not an object (i.e. 'clear' to replace 'blur') or different objects if it is an object (i.e. 'apple' for 'orange'):" + "\n\n" + 
+                    "blurred image of a happy blue bird flying under a great big apple tree" + "\n\n" + "do not use the word 'no' to indicate negativity in the prompts"},
+                {"role": "assistant", "content": "clear image of a happy blue bird flying under a great big orange tree"},
+                {"role": "user", "content": "Replicate the prompt (keeping the +'s and -'s) below while incorporating the negative prompts 'sun, green', replacing them with either antonyms if it's not an object (i.e. 'dark' to replace 'bright') or different objects if it is an object (i.e. 'moon' for 'sun'): " + "\n\n" + 
+                    "a crocodile resting under the blue sky" + "\n\n" + "do not use the word 'no' to indicate negativity in the prompts"},
+                {"role": "assistant", "content": "a white crocodile resting under the moon"},
+                {
+                    "role": "system", "content": "Replicate the prompt (keeping the +'s and -'s and maintaining same meaning of prompt) below while incorporating the negative prompts '" + negativePromptString + "', replacing them with either antonyms if it's not an object or different object if it is an object:" 
+                    + '\n\n' + prompt + '\n\n' + "do not use the word 'no' to indicate negativity in the prompts, or associate negativity to what is not in the negative prompt list (i.e. don't change 'happy' to 'sad' if 'happy' is not in the negative prompt). Try to make the negative prompts sound natural in the flow of the prompt (don't stack them together in the end of the sentence). "
+                },
+                {
+                    "role": "system", "content": "Also, after returning the prompt, give me JUST the words that you used (antonyms of different objects) to replace the negative prompts (in the order they were replaced) in the prompt you output. Don't include any other words!! Separate this from the prompt output with three dashes '---'"
+                }
             ]
         )
 
-        prompt = response.choices[0].message.content
+        prompt, content = response.choices[0].message.content.split('---', 1)
+        session['prompt'] = prompt
         print(prompt)
+
+        tokens = nltk.word_tokenize(content)
+        replacement_words = []
+        for token in tokens:
+            if token.isalpha():
+                replacement_words.append(token)
+        
+        print(replacement_words)
 
     '''
     while True: 
@@ -224,7 +247,7 @@ def adjust(img_base64):
             #continue 
     ''' 
 
-    thread = Thread(target=start_async_task, args=(prompt, num_features, shared_data))
+    thread = Thread(target=start_async_task, args=(prompt, num_features, shared_data, request.form['negPrompt'], replacement_words))
     thread.start()
 
     importances = {}
@@ -312,7 +335,7 @@ def your_url():
             
             #generate_image_async(prompt, num_features)
             
-            thread = Thread(target=start_async_task, args=(prompt, num_features, shared_data))
+            thread = Thread(target=start_async_task, args=(prompt, num_features, shared_data, [], []))
             thread.start()
             #asyncio.create_task(generate_image_async(prompt, num_features))
 

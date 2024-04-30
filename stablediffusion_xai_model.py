@@ -284,7 +284,7 @@ def classifier_fn(*args, labels, prompt_words, perturbed_sample_num) :
     return file
 
 
-def n_most_important_features(n, samples, mean_coefficient_scores, total_words):
+def n_most_important_features(n, samples, mean_coefficient_scores, total_words, neg_prompt):
 
     important_words = {}
     n = int(n)
@@ -293,14 +293,19 @@ def n_most_important_features(n, samples, mean_coefficient_scores, total_words):
         print("Error: value specified is greater than number of words!")
         sys.exit()
 
-    largest_coefficient_scores = sorted(mean_coefficient_scores, reverse=True)[:n]
+    largest_coefficient_scores = sorted(abs(mean_coefficient_scores), reverse=True)[:n]
     counter = 0
 
     for i in range(n):
+        k = 0
         for j in range(len(samples[0])):
-            if largest_coefficient_scores[i] == mean_coefficient_scores[j] and counter < n:
+            if largest_coefficient_scores[i] == abs(mean_coefficient_scores[j]) and counter < n:  
                 if total_words[j] not in important_words:
-                    important_words[total_words[j]] = largest_coefficient_scores[i]
+                    if(mean_coefficient_scores[j] < 0):
+                        important_words[total_words[j] + ' (neg prompt replacement)'] = mean_coefficient_scores[j]
+                        k += 1
+                    else:
+                        important_words[total_words[j]] = mean_coefficient_scores[j] 
                     counter = counter + 1
 
     return important_words
@@ -321,7 +326,7 @@ def normalized_coefficient_scaling(scores):
 Main
 '''
 
-def main(prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_features, words, stop_word_indices, cluster_centers, total_words):
+def main(prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_features, words, stop_word_indices, cluster_centers, total_words, neg_prompt, replacement_words):
 
     print('Generating samples...')
 
@@ -527,12 +532,19 @@ def main(prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_feat
     
     # Normalize the scores
     normalized_coefficient_scores = normalized_coefficient_scaling(mean_coefficient_scores)
-        
+    
     for i in range(len(total_words)):
         total_words[i] = total_words[i].replace('.', '').replace(',', '').replace('!', '')
     
+    for i in range(len(samples[0])):
+        if total_words[i] in replacement_words:
+            print(total_words[i])
+            normalized_coefficient_scores[i] = 0 - normalized_coefficient_scores[i]
+
+    print(normalized_coefficient_scores)
+                
     # Retrieve certain number (user-input) of most important words and their importance scores
-    word_importance_ordered = n_most_important_features(num_features, samples, normalized_coefficient_scores, total_words)
+    word_importance_ordered = n_most_important_features(num_features, samples, normalized_coefficient_scores, total_words, neg_prompt)
     
     
     # Get the feature names (assuming you have them)
@@ -562,5 +574,5 @@ def main(prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_feat
     #black_box_image_url
     
 if __name__ == "__main__":
-    word_importances = main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5]), sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9])
+    word_importances = main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5]), sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9], sys.argv[10], sys.argv[11])
     print(word_importances)

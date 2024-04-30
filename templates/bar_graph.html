@@ -139,11 +139,11 @@
     </div>
 
     <div class='flex-container' style="background-color:white">
-        <!--
+        
         <div class="bar-graph" style="margin-left: 200px;">
             <img id="graph-image" src="data:image/png;base64,{{ img_base64 }}" alt="Word Importance Bar Graph">
         </div>
-        -->
+       
 
         <div class="form-container">
             <form method="post" action = "your-url">
@@ -186,7 +186,7 @@
             </form>
             <!--
             <form method="post" action="your-url">
-                {% for word, feature_importance in word_importances.items() %}
+                {, feature_importance in word_importances.items() %}
                 <div class="slider-container">
                     <label class="descriptor" for="feature_importance_{{ word }}">{{ word }}</label>
                     <input type="range" id="feature_importance_{{ word }}" name="feature_importance_{{ word }}" min="0.0"
@@ -206,7 +206,7 @@
                         <label>Most</label>
                     </div>
                 </div>
-                {% endfor %}
+                
 
                 <label class="negPrompt" for="negPrompt"
                 style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
