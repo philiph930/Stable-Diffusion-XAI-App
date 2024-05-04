@@ -13,6 +13,7 @@
 
     <!-- Add script for automatic form submission -->
     <script>
+
         $(document).ready(function () {
             // Add change event listener to all sliders
             $('input[type="range"]').on('input', function () {
@@ -69,7 +70,7 @@
         socket.on('send_word_importances', function (importances) {
             console.log("Received Word Importances")
             socket.emit('session_importances', importances)
-            word_import
+            console.log(importances);
         })
 
         socket.on('update_image', function (img) {
@@ -82,6 +83,16 @@
             console.log('data:image/png;base64,' + JSON.parse(graph).img_base64);
             $('#graph-image').attr('src', 'data:image/png;base64,' + JSON.parse(graph).img_base64);
         });
+
+        socket.on('send_word_imp', function (word_importance) {
+            $('#word_imports').css("width", word_importance * 150);
+            console.log("word importance: " + word_importance)
+        })
+
+        socket.on('send_word', function (word_name) {
+            console.log("word name: " + word_name);
+            $('#word_imports').text(word_name);
+        })
     </script>
     <!-- <script src="{{ url_for('static', filename='script.js') }}"></script> -->
 </head>
@@ -167,7 +178,8 @@
                         <input type="radio" name="button_{{ word }}" value="+{{ word }}" id="+{{ word }}"><label for="+{{ word }}">+</label>
                         <input type="radio" name="button_{{ word }}" value="++{{ word }}" id="++{{ word }}"><label for="++{{ word }}">++</label>
                         <div class="bar-graph-border">
-                            <div class="bar-graph-fill" style="width: calc(1 * 100px);"></div>
+                            
+                            <div id= "word_imports" class="bar-graph-fill"></div>
                         </div>
                     </div>
                 

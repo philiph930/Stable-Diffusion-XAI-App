@@ -179,7 +179,7 @@ input[name="number_features"] {
 .bar-graph-border {
     display:inline-block;
     height: 15px;
-    width: 50%;
+    width: 150px;
     border-radius: 3px;
     border-color: #000000;
     background-color: #606060;

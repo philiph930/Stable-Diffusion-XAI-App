@@ -56,6 +56,9 @@ async def generate_image_async(prompt, num_features, shared, neg_prompt, replace
     word_importances = stablediffusion_xai_model.main(cleaned_prompt, int_prompt_labels_tensor, label_dict, black_box_image, num_features, words, stop_word_indices, cluster_centers, total_words, neg_prompt, replacement_words)
     shared_data["importances"] = word_importances
     socketio.emit('send_word_importances', word_importances)
+    for x in word_importances:
+        socketio.emit('send_word', x)
+        socketio.emit("send_word_imp", word_importances[x])
 
     default_imp = {}
 
@@ -293,6 +296,8 @@ def handle_my_custom_event(json):
 def handle_importances(importances):
     print('received importances: ' + str(importances))
     session['word_importances'] = importances
+
+
 '''
 @socketio.on('connect') 
 def connect():
