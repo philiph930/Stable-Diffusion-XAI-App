@@ -42,6 +42,49 @@
         });
     </script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <style>
+        .descriptor {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .button-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .button-row input[type="radio"] {
+            margin-right: 5px;
+        }
+        .button-row label {
+            margin-right: 10px;
+        }
+        #feature-container {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            margin-top: 20px;
+        }
+
+        .word-importance-container {
+            width: 150px; /* Fixed width of the slider container */
+            height: 20px;
+            background-color: #ccc; /* Light gray background */
+            margin-top: 10px;
+            position: relative;
+            border: 1px solid #ccc; /* Border for the container */
+        }
+
+        .word-importance-fill {
+            height: 100%;
+            background-color: black; /* Black background for the fill */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+
 <!--
     <script>
         $(document).ready(function() {
@@ -60,40 +103,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8"></script>
 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
-    <script type="text/javascript" charset="utf-8">
-        var socket = io();
-        socket.on('connect', function() {
-            socket.emit('my event', {data: 'I\'m connected!'});
-        });
 
-        socket.on('send_word_importances', function (importances) {
-            console.log("Received Word Importances")
-            socket.emit('session_importances', importances)
-            console.log(importances);
-        })
-
-        socket.on('update_image', function (img) {
-            console.log('Update Image');
-            console.log(JSON.parse(img).img_url);
-            $('#black-box-image').attr('src', JSON.parse(img).img_url);
-        });
-
-        socket.on('graph-image', function (graph) {
-            console.log('data:image/png;base64,' + JSON.parse(graph).img_base64);
-            $('#graph-image').attr('src', 'data:image/png;base64,' + JSON.parse(graph).img_base64);
-        });
-
-        socket.on('send_word_imp', function (word_importance) {
-            $('#word_imports').css("width", word_importance * 150);
-            console.log("word importance: " + word_importance)
-        })
-
-        socket.on('send_word', function (word_name) {
-            console.log("word name: " + word_name);
-            $('#word_imports').text(word_name);
-        })
-    </script>
     <!-- <script src="{{ url_for('static', filename='script.js') }}"></script> -->
 </head>
 
@@ -137,9 +147,11 @@
     <form action="your-url" method="post">
         <div style="background-color: white;">
             <br>
+            <!--
             <label class="negPrompt" for="negPrompt"
                 style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
             <input type="text" name="negPrompt" value="" style="width:400px;">
+            -->
             <br>
         </div>
     </form>
@@ -154,8 +166,293 @@
         <div class="bar-graph" style="margin-left: 200px;">
             <img id="graph-image" src="data:image/png;base64,{{ img_base64 }}" alt="Word Importance Bar Graph">
         </div>
-       
 
+        <form id="word-form" method="post" action="your-url">
+            <label class="negPrompt" for="negPrompt"
+            style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
+            <input type="text" name="negPrompt" value="" style="width:400px;">
+
+            <input type="submit" name="submit" value="Adjust Weights" style="height:25px; width:130px; background-color:lightblue; margin-top:10px;">
+        </form>
+    </div>
+
+    <script type="text/javascript" charset="utf-8">
+        var socket = io();
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            socket.emit('my event', {data: "I'm connected!"});
+        });
+
+        socket.on('send_word_importances', function(importances) {
+            console.log("Received Word Importances");
+            socket.emit('session_importances', importances);
+            console.log(importances);
+        });
+
+        socket.on('update_image', function(img) {
+            console.log('Update Image');
+            console.log(JSON.parse(img).img_url);
+            document.getElementById('black-box-image').setAttribute('src', JSON.parse(img).img_url);
+        });
+
+        socket.on('graph-image', function(graph) {
+            console.log('data:image/png;base64,' + JSON.parse(graph).img_base64);
+            document.getElementById('graph-image').setAttribute('src', 'data:image/png;base64,' + JSON.parse(graph).img_base64);
+        });
+
+        let wordCounter = 0;
+        const wordMap = {};
+
+        /*
+        // Function to create and append the feature importance element
+        function createFeatureElement(word_name, word_importance) {
+
+            const featureContainer = document.getElementById('feature-container');
+
+            // Assign a unique ID to the word if it doesn't already have one
+            if (!wordMap[word_name]) {
+                wordMap[word_name] = wordCounter++;
+            }
+            const uniqueId = wordMap[word_name];
+            console.log(uniqueId);
+
+            // Create label
+            const descriptorLabel = document.createElement('label');
+            descriptorLabel.className = 'descriptor';
+            descriptorLabel.setAttribute('for', `feature_importance_${uniqueId}`);
+            descriptorLabel.textContent = word_name;
+            featureContainer.appendChild(descriptorLabel);
+
+            // Create button row
+            const buttonRow = document.createElement('div');
+            buttonRow.className = 'button-row';
+
+            const radioValues = ['--', '-', '=', '+', '++'];
+            radioValues.forEach(value => {
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = `button_${word_name}`;
+                input.value = `${value}${word_name}`;
+                input.id = `${value}_${uniqueId}`;
+                if (value === '=') {
+                    input.checked = true;
+                }
+
+                const label = document.createElement('label');
+                label.setAttribute('for', `${value}_${uniqueId}`);
+                label.textContent = value;
+
+                buttonRow.appendChild(input);
+                buttonRow.appendChild(label);
+            });
+
+            featureContainer.appendChild(buttonRow);
+
+            // Create word importance element
+
+            const wordImportanceContainer = document.createElement('div');
+            wordImportanceContainer.className = 'word-importance-container';
+            wordImportanceContainer.id = `word_importance_container_${uniqueId}`;
+
+            // Create word importance element (the fill)
+            const wordImportanceFill = document.createElement('div');
+            wordImportanceFill.className = 'word-importance-fill';
+            wordImportanceFill.id = `word_importance_fill_${uniqueId}`;
+
+            // Set the width based on the word importance
+            wordImportanceFill.style.width = `${word_importance * 150}px`;
+
+            // Append fill to the container
+            wordImportanceContainer.appendChild(wordImportanceFill);
+            // Append the container to the feature container
+            featureContainer.appendChild(wordImportanceContainer);
+        }
+        */
+
+        function createFeatureElement(word_name, word_importance) {
+        const formElement = document.getElementById('word-form');
+
+        // Assign a unique ID to the word if it doesn't already have one
+        if (!wordMap[word_name]) {
+            wordMap[word_name] = wordCounter++;
+        }
+        const uniqueId = wordMap[word_name];
+        console.log(`Creating element for ${word_name} with ID ${uniqueId} and importance ${word_importance}`);
+
+        // Create label
+        const descriptorLabel = document.createElement('label');
+        descriptorLabel.className = 'descriptor';
+        descriptorLabel.setAttribute('for', `feature_importance_${uniqueId}`);
+        descriptorLabel.textContent = word_name;
+        formElement.appendChild(descriptorLabel);
+
+        // Create button row
+        const buttonRow = document.createElement('div');
+        buttonRow.className = 'button-row';
+
+        const radioValues = ['--', '-', '=', '+', '++'];
+        radioValues.forEach(value => {
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `button_${word_name}`;
+            input.value = `${value}${word_name}`;
+            input.id = `${value}_${uniqueId}`;
+            if (value === '=') {
+                input.checked = true;
+            }
+
+            const label = document.createElement('label');
+            label.setAttribute('for', `${value}_${uniqueId}`);
+            label.textContent = value;
+
+            buttonRow.appendChild(input);
+            buttonRow.appendChild(label);
+        });
+
+        formElement.appendChild(buttonRow);
+
+        // Create word importance container (the slider background)
+        const wordImportanceContainer = document.createElement('div');
+        wordImportanceContainer.className = 'word-importance-container';
+        wordImportanceContainer.id = `word_importance_container_${uniqueId}`;
+
+        // Create word importance element (the fill)
+        const wordImportanceFill = document.createElement('div');
+        wordImportanceFill.className = 'word-importance-fill';
+        wordImportanceFill.id = `word_importance_fill_${uniqueId}`;
+
+        // Set the width based on the word importance
+        wordImportanceFill.style.width = `${word_importance * 150}px`;
+
+        // Append fill to the container
+        wordImportanceContainer.appendChild(wordImportanceFill);
+        // Append the container to the form element
+        formElement.appendChild(wordImportanceContainer);
+
+        console.log(`Appended word importance element with width ${wordImportanceFill.style.width}`);
+        }
+
+
+        // Listen for 'send_word' event and store word name
+        let currentWord = '';
+        socket.on('send_word', function(word_name) {
+            console.log("word name: " + word_name);
+            currentWord = word_name;
+        });
+
+        // Listen for 'send_word_imp' event and create the feature element
+        socket.on('send_word_imp', function(word_importance) {
+            console.log("word importance: " + word_importance);
+            console.log(currentWord);
+            if (currentWord) {
+                console.log("yes");
+                createFeatureElement(currentWord, word_importance);
+                currentWord = ''; // Reset after processing
+            }
+        });
+
+        // Handle connection and other events if needed
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+        });
+
+        socket.on('connect_error', function(err) {
+            console.error('Connection error:', err);
+        });
+    </script>
+    <!--
+        <div id="feature-container"></div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+        <script type="text/javascript" charset="utf-8">
+            const socket = io();
+            let wordCounter = 0;
+            const wordMap = {};
+    
+            // Function to create and append the feature importance element
+            function createFeatureElement(word_name, word_importance) {
+                const featureContainer = document.getElementById('feature-container');
+    
+                // Assign a unique ID to the word if it doesn't already have one
+                if (!wordMap[word_name]) {
+                    wordMap[word_name] = wordCounter++;
+                }
+                const uniqueId = wordMap[word_name];
+                console.log(uniqueId);
+    
+                // Create label
+                const descriptorLabel = document.createElement('label');
+                descriptorLabel.className = 'descriptor';
+                descriptorLabel.setAttribute('for', `feature_importance_${uniqueId}`);
+                descriptorLabel.textContent = word_name;
+                featureContainer.appendChild(descriptorLabel);
+    
+                // Create button row
+                const buttonRow = document.createElement('div');
+                buttonRow.className = 'button-row';
+    
+                const radioValues = ['--', '-', '=', '+', '++'];
+                radioValues.forEach(value => {
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `button_${word_name}`;
+                    input.value = `${value}${word_name}`;
+                    input.id = `${value}_${uniqueId}`;
+                    if (value === '=') {
+                        input.checked = true;
+                    }
+    
+                    const label = document.createElement('label');
+                    label.setAttribute('for', `${value}_${uniqueId}`);
+                    label.textContent = value;
+    
+                    buttonRow.appendChild(input);
+                    buttonRow.appendChild(label);
+                });
+    
+                featureContainer.appendChild(buttonRow);
+    
+                // Create word importance element
+                const wordImportanceElement = document.createElement('div');
+                wordImportanceElement.id = `word_imports_${uniqueId}`;
+                wordImportanceElement.style.width = `${word_importance * 150}px`;
+                featureContainer.appendChild(wordImportanceElement);
+            }
+    
+            // Listen for 'send_word' event and store word name
+            let currentWord = '';
+            socket.on('send_word', function(word_name) {
+                console.log("word name: " + word_name);
+                currentWord = word_name;
+            });
+    
+            // Listen for 'send_word_imp' event and create the feature element
+            socket.on('send_word_imp', function(word_importance) {
+                console.log("word importance: " + word_importance);
+                console.log(currentWord);
+                if (currentWord) {
+                    console.log("yes");
+                    createFeatureElement(currentWord, word_importance);
+                    currentWord = ''; // Reset after processing
+                }
+            });
+    
+            // Handle connection and other events if needed
+            socket.on('connect', function() {
+                console.log('Connected to server');
+            });
+    
+            socket.on('disconnect', function() {
+                console.log('Disconnected from server');
+            });
+    
+            socket.on('connect_error', function(err) {
+                console.error('Connection error:', err);
+            });
+        </script>
+    -->
+
+        <!--
         <div class="form-container">
             <form method="post" action = "your-url">
                 <div class="button-container">
@@ -168,35 +465,24 @@
                         </div>
                     </div>
                 {% for word, feature_importance in word_importances.items() %}
-                
-                    
-                    <label class="descriptor" for="feature_importance_{{ word }}">{{ word}}</label>
+
+                    <label class="descriptor" for="feature_importance_{{ word }}_{{ loop.index }}">{{ word }}</label>
                     <div class="button-row">
-                        <input type="radio" name="button_{{ word }}" value="--{{ word }}" id="--{{ word }}"><label for="--{{ word }}">--</label>
-                        <input type="radio" name="button_{{ word }}" value="-{{ word }}" id="-{{ word }}"><label for="-{{ word }}">-</label>
-                        <input type="radio" name="button_{{ word }}" value="={{ word }}" id="={{ word }}" checked="checked"><label for="={{ word }}">=</label>
-                        <input type="radio" name="button_{{ word }}" value="+{{ word }}" id="+{{ word }}"><label for="+{{ word }}">+</label>
-                        <input type="radio" name="button_{{ word }}" value="++{{ word }}" id="++{{ word }}"><label for="++{{ word }}">++</label>
-                        <div class="bar-graph-border">
-                            
-                            <div id= "word_imports" class="bar-graph-fill"></div>
-                        </div>
+                        <input type="radio" name="button_{{ word }}" value="--{{ word }}" id="--{{ word }}_{{ loop.index }}"><label for="--{{ word }}_{{ loop.index }}">--</label>
+                        <input type="radio" name="button_{{ word }}" value="-{{ word }}" id="-{{ word }}_{{ loop.index }}"><label for="-{{ word }}_{{ loop.index }}">-</label>
+                        <input type="radio" name="button_{{ word }}" value="={{ word }}" id="={{ word }}_{{ loop.index }}" checked="checked"><label for="={{ word }}_{{ loop.index }}">=</label>
+                        <input type="radio" name="button_{{ word }}" value="+{{ word }}" id="+{{ word }}_{{ loop.index }}"><label for="+{{ word }}_{{ loop.index }}">+</label>
+                        <input type="radio" name="button_{{ word }}" value="++{{ word }}" id="++{{ word }}_{{ loop.index }}"><label for="++{{ word }}_{{ loop.index }}">++</label>
                     </div>
-                
 
+                    <div class="bar-graph-border">
+                        
+                        <div id= "word_imports_{{ loop.index }}" class="bar-graph-fill"></div>
+                    </div>
                 {% endfor %}
-
-                </div>
-
-                <label class="negPrompt" for="negPrompt"
-                style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
-                <input type="text" name="negPrompt" value="" style="width:400px;">
-
-                <input type="submit" name="submit" value="Adjust Weights" style="height:25px; width:130px; background-color:lightblue; margin-top:10px;">
-                <!-- <input type="submit" name="submit" value="Render"
-                    style="height:20px; width:100px; background-color:lightblue; margin-left:10px;"> -->
-            </form>
-            <!--
+                -->
+                <!--
+            
             <form method="post" action="your-url">
                 {, feature_importance in word_importances.items() %}
                 <div class="slider-container">
@@ -218,15 +504,16 @@
                         <label>Most</label>
                     </div>
                 </div>
-                
-
+            -->   
+            <!--
+            <form>
                 <label class="negPrompt" for="negPrompt"
                 style="margin-left:420px; font-family:Verdana, Geneva, Tahoma, sans-serif; background-color: white;">Negative Prompt</label>
                 <input type="text" name="negPrompt" value="" style="width:400px;">
 
                 <input type="submit" name="submit" value="Adjust Weights" style="height:25px; width:130px; background-color:lightblue; margin-top:10px;">
-            </form> 
-            -->
+            </form>
+        -->
             
         </div>
     </div>

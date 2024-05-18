@@ -215,6 +215,9 @@ def adjust(img_base64):
         
         print(replacement_words)
 
+    else:
+        replacement_words = []
+
     '''
     while True: 
         # Set your Dezgo API key and endpoint
