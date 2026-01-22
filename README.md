@@ -14,22 +14,31 @@ Explainable AI (XAI) focuses on making complex machine learning systems understa
 
 ## Installation
 
-1. Clone the repository  
-git clone https://github.com/philiph930/Stable-Diffusion-XAI-App.git  
-cd Stable-Diffusion-XAI-App  
+1. Clone the repository
 
-2. Install dependencies  
-pip install -r requirements.txt  
+```bash
+git clone https://github.com/philiph930/Stable-Diffusion-XAI-App.git
+cd Stable-Diffusion-XAI-App
+```
 
-3. Create a .env file and add your Stable Diffusion API key  
-STABLE_DIFFUSION_API_KEY=<your_key_here>  
+3. Install dependencies
+```bash
+pip install -r requirements.txt
+``` 
+
+5. Create a .env file and add your Stable Diffusion API key
+```bash 
+STABLE_DIFFUSION_API_KEY=<your_key_here>
+```
 
 Alternatively, configure a local Stable Diffusion model path.
 
 ## Running the App
 
 Start the application by running  
-python app.py  
+```bash
+python app.py
+```
 
 Then open your browser and navigate to  
 http://localhost:5000
